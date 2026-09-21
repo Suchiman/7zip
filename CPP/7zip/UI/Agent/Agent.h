@@ -257,7 +257,12 @@ public:
 
   bool Is_Attrib_ReadOnly() const
   {
+   #ifdef _WIN32
     return _attrib != INVALID_FILE_ATTRIBUTES && (_attrib & FILE_ATTRIBUTE_READONLY);
+   #else
+    // Qt/posix port: (_attrib) holds win-style attributes derived from st_mode.
+    return (_attrib & 1) != 0; // FILE_ATTRIBUTE_READONLY
+   #endif
   }
 
   bool IsThere_ReadOnlyArc() const
@@ -339,7 +344,9 @@ struct CCodecIcons
   CObjectVector<CIconPair> IconPairs;
 
   // void Clear() { IconPairs.Clear(); }
+ #ifdef _WIN32
   void LoadIcons(HMODULE m);
+ #endif
   bool FindIconIndex(const UString &ext, int &iconIndex) const;
 };
 

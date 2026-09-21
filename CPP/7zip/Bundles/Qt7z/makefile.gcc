@@ -1,0 +1,93 @@
+# Qt7z/makefile.gcc
+#
+# Builds the platform independent part of 7-Zip (codecs, archive handlers,
+# UI/Common and the UI/Agent "archive as a folder" layer) into one static
+# library that the Qt file manager in ../../UI/Qt links against.
+#
+# It deliberately mirrors ../Alone2/makefile.gcc (the 7zz console program),
+# minus UI/Console and plus UI/Agent, so both programs use the same engine.
+
+PROG = 7z_qt_lib
+LIB_NAME = lib7z.a
+
+O = _o
+
+include ../Format7zF/Arc_gcc.mak
+
+SYS_OBJS = \
+  $O/MyWindows.o \
+
+LOCAL_FLAGS = \
+  $(LOCAL_FLAGS_ST) \
+
+UI_COMMON_OBJS = \
+  $O/ArchiveCommandLine.o \
+  $O/ArchiveExtractCallback.o \
+  $O/ArchiveName.o \
+  $O/ArchiveOpenCallback.o \
+  $O/Bench.o \
+  $O/DefaultName.o \
+  $O/EnumDirItems.o \
+  $O/Extract.o \
+  $O/ExtractingFilePath.o \
+  $O/HashCalc.o \
+  $O/LoadCodecs.o \
+  $O/OpenArchive.o \
+  $O/PropIDUtils.o \
+  $O/SetProperties.o \
+  $O/SortUtils.o \
+  $O/TempFiles.o \
+  $O/Update.o \
+  $O/UpdateAction.o \
+  $O/UpdateCallback.o \
+  $O/UpdatePair.o \
+  $O/UpdateProduce.o \
+  $O/WorkDir.o \
+
+AGENT_OBJS = \
+  $O/Agent.o \
+  $O/AgentOut.o \
+  $O/AgentProxy.o \
+  $O/ArchiveFolder.o \
+  $O/ArchiveFolderOpen.o \
+  $O/ArchiveFolderOut.o \
+  $O/UpdateCallbackAgent.o \
+
+COMMON_OBJS_2 = \
+  $O/CommandLineParser.o \
+  $O/Lang.o \
+  $O/ListFileUtils.o \
+  $O/StdInStream.o \
+  $O/StdOutStream.o \
+
+WIN_OBJS_2 = \
+  $O/ErrorMsg.o \
+  $O/FileLink.o \
+  $O/SystemInfo.o \
+
+7ZIP_COMMON_OBJS_2 = \
+  $O/FilePathAutoRename.o \
+  $O/FileStreams.o \
+  $O/MultiOutStream.o \
+
+OBJS = \
+  $(ARC_OBJS) \
+  $(SYS_OBJS) \
+  $(COMMON_OBJS_2) \
+  $(WIN_OBJS_2) \
+  $(7ZIP_COMMON_OBJS_2) \
+  $(UI_COMMON_OBJS) \
+  $(AGENT_OBJS) \
+
+# The default target of ../../7zip_gcc.mak links a program; we only want the
+# objects, collected into a static library. Always invoke this makefile as
+#   make -f makefile.gcc lib
+lib: $(O)/$(LIB_NAME)
+
+$(O)/$(LIB_NAME): $(OBJS)
+	rm -f $@
+	$(AR) rcs $@ $(OBJS)
+
+include ../../7zip_gcc.mak
+
+.DEFAULT_GOAL := lib

@@ -6,10 +6,13 @@
 
 #include "../../../Common/StringToInt.h"
 #include "../../../Windows/DLL.h"
+#ifdef _WIN32
 #include "../../../Windows/ResourceString.h"
+#endif
 
 #include "Agent.h"
 
+#ifdef _WIN32
 extern HINSTANCE g_hInstance;
 static const UINT kIconTypesResId = 100;
 
@@ -44,6 +47,8 @@ void CCodecIcons::LoadIcons(HMODULE m)
   }
 }
 
+#endif // _WIN32
+
 bool CCodecIcons::FindIconIndex(const UString &ext, int &iconIndex) const
 {
   iconIndex = -1;
@@ -67,6 +72,7 @@ void CArchiveFolderManager::LoadFormats()
 
   LoadGlobalCodecs();
 
+ #ifdef _WIN32
   #ifdef Z7_EXTERNAL_CODECS
   CodecIconsVector.Clear();
   FOR_VECTOR (i, g_CodecsObj->Libs)
@@ -76,6 +82,22 @@ void CArchiveFolderManager::LoadFormats()
   }
   #endif
   InternalIcons.LoadIcons(g_hInstance);
+ #else
+  // Qt/posix port: archive-type icons come from the Qt icon theme, not from
+  // string resources of a windows module. We only need the extension list here.
+  InternalIcons.IconPairs.Clear();
+  FOR_VECTOR (i, g_CodecsObj->Formats)
+  {
+    const CArcInfoEx &ai = g_CodecsObj->Formats[i];
+    FOR_VECTOR (k, ai.Exts)
+    {
+      CCodecIcons::CIconPair ip;
+      ip.Ext = ai.Exts[k].Ext;
+      ip.IconIndex = -1;
+      InternalIcons.IconPairs.Add(ip);
+    }
+  }
+ #endif
   WasLoaded = true;
 }
 
@@ -204,6 +226,7 @@ Z7_COM7F_IMF(CArchiveFolderManager::GetIconPath(const wchar_t *ext, BSTR *iconPa
   }
   #endif
 
+ #ifdef _WIN32
   int ii;
   if (InternalIcons.FindIconIndex(ext, ii))
   {
@@ -214,6 +237,9 @@ Z7_COM7F_IMF(CArchiveFolderManager::GetIconPath(const wchar_t *ext, BSTR *iconPa
       return StringToBstr(fs2us(path), iconPath);
     }
   }
+ #else
+  UNUSED_VAR(ext)
+ #endif
   return S_OK;
 }
 

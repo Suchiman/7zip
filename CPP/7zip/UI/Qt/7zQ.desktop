@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=7-Zip File Manager
+GenericName=Archive Manager
+Comment=Create and open 7z, zip, tar, xz and many other archives
+Exec=7zQ %f
+Icon=package-x-generic
+Terminal=false
+Categories=Utility;Archiving;Compression;FileTools;Qt;
+MimeType=application/x-7z-compressed;application/zip;application/x-tar;application/x-xz;application/gzip;application/x-bzip2;application/vnd.rar;application/x-cpio;application/x-iso9660-image;

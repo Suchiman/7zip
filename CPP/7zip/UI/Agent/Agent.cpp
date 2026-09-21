@@ -53,9 +53,8 @@ static NSynchronization::CCriticalSection g_CriticalSection;
 #define MT_LOCK
 #endif
 
-void FreeGlobalCodecs()
+static void FreeGlobalCodecs_NoLock()
 {
-  MT_LOCK
 
   #ifdef Z7_EXTERNAL_CODECS
   if (g_CodecsObj)
@@ -69,6 +68,12 @@ void FreeGlobalCodecs()
   #else
   g_CodecsRef.Release();
   #endif
+}
+
+void FreeGlobalCodecs()
+{
+  MT_LOCK
+  FreeGlobalCodecs_NoLock();
 }
 
 HRESULT LoadGlobalCodecs()
@@ -92,7 +97,10 @@ HRESULT LoadGlobalCodecs()
   RINOK(g_CodecsObj->Load())
   if (g_CodecsObj->Formats.IsEmpty())
   {
-    FreeGlobalCodecs();
+    /* we are inside MT_LOCK here: FreeGlobalCodecs() would take the same
+       lock again. That is harmless with a windows CRITICAL_SECTION (it is
+       recursive) but it deadlocks on posix. */
+    FreeGlobalCodecs_NoLock();
     return E_NOTIMPL;
   }
 
@@ -1517,7 +1525,10 @@ Z7_COM7F_IMF(CAgentFolder::Extract(const UInt32 *indices,
   {
     pathU = us2fs(path);
     if (!pathU.IsEmpty()
-      && !NFile::NName::IsAltStreamPrefixWithColon(path))
+     #ifdef _WIN32
+      && !NFile::NName::IsAltStreamPrefixWithColon(path)
+     #endif
+        )
     {
       NFile::NName::NormalizeDirPathPrefix(pathU);
       NFile::NDir::CreateComplexDir(pathU);
@@ -1644,8 +1655,13 @@ Z7_COM7F_IMF(CAgent::Open(
       return GetLastError_noZero_HRESULT();
     if (fi.IsDir())
       return E_FAIL;
+   #ifdef _WIN32
     _attrib = fi.Attrib;
     _isDeviceFile = fi.IsDevice;
+   #else
+    _attrib = fi.GetWinAttrib();
+    _isDeviceFile = false;
+   #endif
     FString dirPrefix, fileName;
     if (NFile::NDir::GetFullPathAndSplit(us2fs(_archiveFilePath), dirPrefix, fileName))
     {
@@ -1691,7 +1707,11 @@ Z7_COM7F_IMF(CAgent::Open(
     if (!inStream)
     {
       arc.MTime.Set_From_FiTime(fi.MTime);
+     #ifdef _WIN32
       arc.MTime.Def = !fi.IsDevice;
+     #else
+      arc.MTime.Def = true;
+     #endif
     }
     
     ArchiveType = GetTypeOfArc(arc);

@@ -972,6 +972,13 @@ HRESULT CProxyArc2::Load(const CArc &arc, IProgress *progress)
     {
       const wchar_t *s;
       unsigned len;
+      /* (prop) must stay alive until AllocStringAndCopy() below has copied
+         the string: ~CPropVariant() frees the BSTR that (s) points into.
+         With the windows OLE allocator the freed data usually still reads
+         back unchanged, so this is invisible there, but SysFreeString() is
+         plain free() in Common/MyWindows.cpp and the allocator writes its
+         own bookkeeping over the first bytes of the name. */
+      NCOM::CPropVariant prop;
       if (p && propType == NPropDataType::kUtf8z)
       {
         tempAString = (const char *)p;
@@ -981,7 +988,6 @@ HRESULT CProxyArc2::Load(const CArc &arc, IProgress *progress)
       }
       else
       {
-        NCOM::CPropVariant prop;
         RINOK(arc.Archive->GetProperty(i, kpidName, &prop))
         if (prop.vt == VT_BSTR)
           s = prop.bstrVal;

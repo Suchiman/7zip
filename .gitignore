@@ -1,0 +1,70 @@
+# ---------------------------------------------------------------------------
+# Build output directories
+# ---------------------------------------------------------------------------
+# gcc/clang makefiles (makefile.gcc, 7zip_gcc*.mak) emit into _o/
+_o/
+# nmake / Windows builds emit into b/ (b/c, b/g, b/m_x64, ...)
+b/
+# a few makefiles use a bare o/ output dir
+/o/
+
+# ---------------------------------------------------------------------------
+# Compiled objects, libraries and executables
+# ---------------------------------------------------------------------------
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.exp
+*.res
+# gcc dependency files
+*.d
+
+# 7-Zip build products (no extension on Unix, so match by name)
+7zz
+7zzs
+7za
+7zr
+7zQ
+lib7z.a
+
+# ---------------------------------------------------------------------------
+# Qt / qmake generated files
+# ---------------------------------------------------------------------------
+# NOTE: the tracked 7-Zip makefiles are all lowercase "makefile[.gcc]";
+# qmake generates a capital-M "Makefile", so this only hits generated ones.
+Makefile
+.qmake.stash
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.moc
+*.pro.user
+*.pro.user.*
+
+# ---------------------------------------------------------------------------
+# Nix
+# ---------------------------------------------------------------------------
+result
+result-*
+
+# ---------------------------------------------------------------------------
+# Editors / tooling / OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+.cache/
+.clangd/
+compile_commands.json
+*.swp
+*~
+.DS_Store
+Thumbs.db
