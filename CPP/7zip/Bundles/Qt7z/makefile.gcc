@@ -12,6 +12,15 @@ LIB_NAME = lib7z.a
 
 O = _o
 
+# 7-Zip compiles with -Werror. GCC 16's -Warray-bounds reports out-of-bounds
+# reads in Archive/HandlerCont.cpp and Common/MyCom.h that its own inlining
+# invents -- they disappear at -O0 or with -fno-inline, and the code is fine.
+# nixpkgs carries the same workaround in its 7zz package.
+#   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=122197
+# CFLAGS_WARN is unset by ../../7zip_gcc.mak and only appended to CFLAGS_BASE,
+# so this is the intended hook; ?= keeps it overridable from the command line.
+CFLAGS_WARN ?= -Wno-error=array-bounds
+
 include ../Format7zF/Arc_gcc.mak
 
 SYS_OBJS = \
